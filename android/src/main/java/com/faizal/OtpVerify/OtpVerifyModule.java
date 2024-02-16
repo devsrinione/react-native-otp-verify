@@ -31,7 +31,9 @@ import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.module.annotations.ReactModule;
-
+import android.annotation.SuppressLint;
+import android.content.Context;
+import android.os.Build;
 @ReactModule(name = OtpVerifyModule.NAME)
 public class OtpVerifyModule extends ReactContextBaseJavaModule implements LifecycleEventListener, ActivityEventListener {
     public static final String NAME = "OtpVerify";
@@ -112,14 +114,25 @@ public class OtpVerifyModule extends ReactContextBaseJavaModule implements Lifec
         }
     }
 
-
+@SuppressLint("UnspecifiedRegisterReceiverFlag")
     private void registerReceiverIfNecessary(BroadcastReceiver receiver) {
         if (getCurrentActivity() == null) return;
         try {
-            getCurrentActivity().registerReceiver(
-                    receiver,
-                    new IntentFilter(SmsRetriever.SMS_RETRIEVED_ACTION)
-            );
+           if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                getCurrentActivity().registerReceiver(
+                        receiver,
+                        new IntentFilter(SmsRetriever.SMS_RETRIEVED_ACTION),
+                        SmsRetriever.SEND_PERMISSION,
+                        null,
+                        Context.RECEIVER_EXPORTED
+                );
+            }
+            else {
+                getCurrentActivity().registerReceiver(
+                        receiver,
+                        new IntentFilter(SmsRetriever.SMS_RETRIEVED_ACTION)
+                );
+            }
             Log.d(TAG, "Receiver Registered");
             isReceiverRegistered = true;
         } catch (Exception e) {
